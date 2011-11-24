@@ -12,8 +12,22 @@ function listener (req, res) {
 
   var log = require('./log').create();
 
+  var form_files = [];
+
   log.raw([req.method, req.url, 'HTTP/' + req.httpVersion].join(' '));
   log.format(req.headers);
+  var re = new RegExp('^multipart/form-data(?:;|$)');
+  if (re.test(req.headers['content-type'])) {
+    var form = new require('formidable').IncomingForm();
+
+    form.parse(req, function(err, fields, files) {
+      form_files = files;
+      log.format(fields);
+      log.format(files);
+    });
+  };
+    
+
 
   // don't time out...
   res.socket.setTimeout(0 * 60 * 1000);
@@ -59,6 +73,15 @@ function listener (req, res) {
       });
       res.end();
     };
+
+    var fs = require('fs');
+    Object.keys(form_files).forEach(function (key) {
+      var file = form_files[key];
+      fs.unlink(file.path, function (exn) {
+        log.format('unlink', file.path, exn);
+      });
+    });
+
   });
 
   //bufs: var data = [];
