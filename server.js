@@ -67,66 +67,68 @@ var handle_externally = (function _init_handle_externally () {
   };
 })();
 
-function listener (req, res) {
-  var log = require('./log').create();
+var listener = (function _init_listener () {
+  return function _impl_listener (req, res) {
+    var log = require('./log').create();
 
-  log.raw([req.method, req.url, 'HTTP/' + req.httpVersion].join(' '));
-  log.format(req.headers);
-  var re = new RegExp('^multipart/form-data(?:;|$)');
-  if (re.test(req.headers['content-type'])) {
-    var form = new require('formidable').IncomingForm();
+    log.raw([req.method, req.url, 'HTTP/' + req.httpVersion].join(' '));
+    log.format(req.headers);
+    var re = new RegExp('^multipart/form-data(?:;|$)');
+    if (re.test(req.headers['content-type'])) {
+      var form = new require('formidable').IncomingForm();
 
-    form.parse(req, function(err, fields, files) {
+      form.parse(req, function(err, fields, files) {
 
-      (function _scope_pretty_print_form () {
-        var pretty = {};
-        Object.keys(fields).forEach(function _cb_cpy_fields (key) {
-          pretty[key] = fields[key];
+        (function _scope_pretty_print_form () {
+          var pretty = {};
+          Object.keys(fields).forEach(function _cb_cpy_fields (key) {
+            pretty[key] = fields[key];
+          });
+          Object.keys(files).forEach(function _cb_cpy_partial_files (key) {
+            pretty[key] = {};
+            [ 'name', 'size', 'type', 'path'
+            ].forEach(function _cb_cpy_some_file_props (property) {
+              pretty[key][property] = files[key][property];
+            });
+          });
+          log.format(pretty);
+        })();
+
+        // TODO whitelist fields and files?
+        var env = {};
+        Object.keys(fields).forEach(function _cb_export_fields (key) {
+          env['TEXT_' + key] = fields[key];
         });
-        Object.keys(files).forEach(function _cb_cpy_partial_files (key) {
-          pretty[key] = {};
-          [ 'name', 'size', 'type', 'path'
-          ].forEach(function _cb_cpy_some_file_props (property) {
-            pretty[key][property] = files[key][property];
+        Object.keys(files).forEach(function _cb_export_files (key) {
+          env['FILE_' + key] = files[key].path;
+          env['FILE_' + key + '_SIZE'] = files[key].size;
+          env['FILE_' + key + '_TYPE'] = files[key].type;
+        });
+
+        var options = {
+          log: log,
+          env: env
+        };
+        handle_externally(req, res, options, function _cb_form_cleanup () {
+          var fs = require('fs');
+          Object.keys(files).forEach(function _cb_unlink_files (key) {
+            var file = files[key];
+            fs.unlink(file.path, function _cb_file_unlinked (exn) {
+              log.format('unlink', file.path, exn);
+            });
           });
         });
-        log.format(pretty);
-      })();
-
-      // TODO whitelist fields and files?
-      var env = {};
-      Object.keys(fields).forEach(function _cb_export_fields (key) {
-        env['TEXT_' + key] = fields[key];
-      });
-      Object.keys(files).forEach(function _cb_export_files (key) {
-        env['FILE_' + key] = files[key].path;
-        env['FILE_' + key + '_SIZE'] = files[key].size;
-        env['FILE_' + key + '_TYPE'] = files[key].type;
       });
 
+    } else {
       var options = {
         log: log,
-        env: env
+        env: {}
       };
-      handle_externally(req, res, options, function _cb_multipart_cleanup () {
-        var fs = require('fs');
-        Object.keys(files).forEach(function _cb_unlink_files (key) {
-          var file = files[key];
-          fs.unlink(file.path, function _cb_file_unlinked (exn) {
-            log.format('unlink', file.path, exn);
-          });
-        });
-      });
-    });
-
-  } else {
-    var options = {
-      log: log,
-      env: {}
+      handle_externally(req, res, options, function _cb_nop () {});
     };
-    handle_externally(req, res, options, function _cb_nop () {});
   };
-};
+})();
 
 (function _scope_setup_https_server () {
   var https = require('https');
