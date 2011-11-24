@@ -22,10 +22,11 @@ var handle_externally = (function () {
     var path = require('path');
     var child  = spawn(path.join(root_path, 'server.sh'), [], { env: env });
 
-    var data = '';
+    // TODO minimal buffering
+    var data = [];
 
     child.stdout.on('data', function (chunk) {
-      data += chunk;
+      data.push(chunk);
     });
     
     child.stderr.on('data', function (chunk) {
@@ -35,7 +36,10 @@ var handle_externally = (function () {
     child.on('exit', function (code) {
       log.format('child', 'exit', code);
       if (code === 0) {
-        res.socket.end(data);
+        data.forEach(function (chunk) {
+          res.socket.write(chunk);
+        });
+        res.socket.end();
         //var content = data;
         //res.writeHead(200, {
         //  'Content-Type': 'text/plain',
@@ -51,33 +55,6 @@ var handle_externally = (function () {
 
       callback();
     });
-
-    //bufs: var data = [];
-    //bufs: 
-    //bufs: child.stdout.on('data', function (chunk) {
-    //bufs:   data.push(chunk);
-    //bufs: });
-    //bufs: 
-    //bufs: child.stderr.on('data', function (chunk) {
-    //bufs:   console.log('child stderr: ' + chunk.toString().replace(/\n$/,''));
-    //bufs: });
-    //bufs: 
-    //bufs: child.on('exit', function (code) {
-    //bufs:   if (code === 0) {
-    //bufs:     var content = join_buffers(data);
-    //bufs:     res.writeHead(200, {
-    //bufs:       'Content-Type': 'text/plain',
-    //bufs:       'Content-Length': content.length
-    //bufs:     });
-    //bufs:     res.end(content);
-    //bufs:   } else {
-    //bufs:     console.error('child exit:', code);
-    //bufs:     res.writeHead(500, {
-    //bufs:       'Content-Length': 0
-    //bufs:     });
-    //bufs:     res.end();
-    //bufs:   };
-    //bufs: });
   };
 })();
 
@@ -185,22 +162,3 @@ function listener (req, res) {
     }
   });
 })();
-
-//bufs: function join_buffers(buffers) {
-//bufs:   if (buffers instanceof Array) {
-//bufs:     if (buffers.length > 0) {
-//bufs:       var length = buffers.reduce(function (x, y) {
-//bufs:         return x + y.length;
-//bufs:       }, 0);
-//bufs:       var buffer = new Buffer(length);
-//bufs:       var targetStart = 0;
-//bufs:       buffers.forEach(function (x) {
-//bufs:         x.copy(buffer, targetStart);
-//bufs:         targetStart += x.length;
-//bufs:       });
-//bufs:       return buffer;
-//bufs:     } else {
-//bufs:       return '';
-//bufs:     };
-//bufs:   };
-//bufs: };
