@@ -1,9 +1,6 @@
 #! /bin/sh
 set -euf
 
-date="`date --rfc-3339=s`"
-echo "$date $METHOD $URL" >&2
-
 prn() {
   printf '%s\r\n' "$*"
 }
@@ -77,9 +74,7 @@ espresso_build_apk() {
   chunk '
 <!doctype html>
 <style>
-label:after {
-  content:": ";
-}
+label:after{content:": ";}
 </style>
 <title>espresso build apk</title>
 <h1>espresso build apk</h1>
