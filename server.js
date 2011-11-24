@@ -11,20 +11,16 @@ var root_path = (function () {
 
 var handle_externally = (function () {
 
-  return function (req, res, log, callback) {
-    // TODO setup environment
+  return function (req, res, options, callback) {
+    var log = options.log;
+    var env = JSON.parse(JSON.stringify(options.env)); // copy
 
-    var options = {
-      env: {}, //JSON.parse(JSON.stringify(process.env)),
-      //customFds: [-1, -1, 2]
-    };
-
-    options.env.METHOD = req.method;
-    options.env.URL = req.url;
+    env.METHOD = req.method;
+    env.URL = req.url;
 
     var spawn = require('child_process').spawn;
     var path = require('path');
-    var child  = spawn(path.join(root_path, 'server.sh'), [], options);
+    var child  = spawn(path.join(root_path, 'server.sh'), [], { env: env });
 
     var data = '';
 
@@ -85,6 +81,16 @@ var handle_externally = (function () {
   };
 })();
 
+function identity(x) { return x };
+function replace_properties(dst, src, mod) {
+  dst_key_mod = mod.dst_key_mod || identity;
+  src_val_mod = mod.src_val_mod || identity;
+
+  Object.keys(src).forEach(function (key) {
+    dst[dst_key_mod(key)] = src_val_mod(src[key]);
+  });
+};
+
 function listener (req, res) {
 
   // don't time out...
@@ -100,7 +106,7 @@ function listener (req, res) {
 
     form.parse(req, function(err, fields, files) {
 
-      (function () {
+      (function pretty_print_form () {
         var pretty = {};
         Object.keys(fields).forEach(function (key) {
           pretty[key] = fields[key];
@@ -115,7 +121,23 @@ function listener (req, res) {
         log.format(pretty);
       })();
 
-      handle_externally(req, res, log, function () {
+      // TODO whitelist fields and files?
+      var env = {};
+      replace_properties(env, fields, {
+        dst_key_mod: function (key) {
+          return 'TEXT_' + key;
+        }
+      });
+      replace_properties(env, files, {
+        dst_key_mod: function (key) {
+          return 'FILE_' + key;
+        },
+        src_val_mod: function (value) {
+          return value.path;
+        }
+      });
+
+      handle_externally(req, res, { log: log, env: env }, function () {
         var fs = require('fs');
         Object.keys(files).forEach(function (key) {
           var file = files[key];
@@ -127,7 +149,7 @@ function listener (req, res) {
     });
 
   } else {
-    handle_externally(req, res, log, function () {
+    handle_externally(req, res, { log: log, env: {} }, function () {
       // nop
     });
   };
