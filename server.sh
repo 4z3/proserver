@@ -11,6 +11,11 @@ chunk() {
   prn "$1"
 }
 
+chunkln() {
+  chunk "$*
+"
+}
+
 not_found() {
     prn HTTP/1.1 404 Not Found
     prn Content-Length: 0
@@ -119,7 +124,9 @@ espresso_build_apk_apply() {
   prn Transfer-Encoding: chunked
   prn Content-Type: text/plain
   prn
-  chunk "`env`"
+  chunkln "`env`"
+  chunkln "archive type: `file -ib "$FILE_archive"`"
+  chunkln "archive size: `wc -c "$FILE_archive" | awk '{print$1}'`"
   chunk
 }
 
