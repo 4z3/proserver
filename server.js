@@ -20,7 +20,10 @@ var handle_externally = (function () {
 
     var spawn = require('child_process').spawn;
     var path = require('path');
-    var child  = spawn(path.join(root_path, 'server.sh'), [], { env: env });
+    var child  = spawn(path.join(root_path, 'server.sh'), [], {
+      cwd: root_path,
+      env: env
+    });
 
     // TODO minimal buffering
     var data = [];

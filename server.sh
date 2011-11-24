@@ -131,6 +131,15 @@ espresso_build_apk_apply() {
   chunk
 }
 
+serve_static_file() {
+  set -- "$1" "$2" `wc -c "$1" | awk '{print$1}'`
+  prn HTTP/1.1 200 OK
+  prn Content-Type: "$2"
+  prn Content-Length: $3
+  prn
+  dd if="$1" bs=$3
+}
+
 case "$URL" in
   ($homepage)
     case "$METHOD" in
@@ -148,6 +157,12 @@ case "$URL" in
     case "$METHOD" in
       (GET) espresso_build_apk ;;
       (POST) espresso_build_apk_apply ;;
+      (*) method_not_allowed ;;
+    esac
+    ;;
+  (/favicon.ico)
+    case "$METHOD" in
+      (GET) serve_static_file static/favicon.ico image/x-icon ;;
       (*) method_not_allowed ;;
     esac
     ;;
