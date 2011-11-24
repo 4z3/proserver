@@ -99,8 +99,21 @@ function listener (req, res) {
     var form = new require('formidable').IncomingForm();
 
     form.parse(req, function(err, fields, files) {
-      log.format(fields);
-      log.format(files);
+
+      (function () {
+        var pretty = {};
+        Object.keys(fields).forEach(function (key) {
+          pretty[key] = fields[key];
+        });
+        Object.keys(files).forEach(function (key) {
+          pretty[key] = {};
+          [ 'name', 'size', 'type', 'path'
+          ].forEach(function (property) {
+            pretty[key][property] = files[key][property];
+          });
+        });
+        log.format(pretty);
+      })();
 
       handle_externally(req, res, log, function () {
         var fs = require('fs');
