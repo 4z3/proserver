@@ -38,41 +38,43 @@ input_file() {
   echo -n "<input id=\"$1\" type=\"file\" name=\"$1\" accept=\"$2\">"
 }
 
-case "$URL" in
-  (/)
-    prn HTTP/1.1 200 OK
-    prn Transfer-Encoding: chunked
-    prn
-    chunk '
+homepage=/
+homepage() {
+  prn HTTP/1.1 200 OK
+  prn Transfer-Encoding: chunked
+  prn
+  chunk "
 <!doctype html>
 <title>homepage</title>
 <h1>homepage</h1>
-<a href="/35d2fbd31c96c2db262971e361e6893753346102">login</a>
-'
-    chunk
-    ;;
-  (/35d2fbd31c96c2db262971e361e6893753346102)
-    prn HTTP/1.1 200 OK
-    prn Transfer-Encoding: chunked
-    prn
-    chunk '
+<a href='$account_overview'>login</a>
+"
+  chunk
+}
+
+account_overview=/`echo -n account overview | sha1sum | awk '{print$1}'`
+account_overview() {
+  prn HTTP/1.1 200 OK
+  prn Transfer-Encoding: chunked
+  prn
+  chunk "
 <!doctype html>
 <title>account overview</title>
 <h1>account overview</h1>
-<a href="/">logout</a>
+<a href='$homepage'>logout</a>
 <h2>applicatives</h2>
-<a href="/b155c7455a3b483382447afe3257381b50fd776c">espresso build apk</a>
-'
-    chunk
-    ;;
-  (/b155c7455a3b483382447afe3257381b50fd776c)
-    case "$METHOD" in
-      (GET)
-        # TODO Content-Type
-        prn HTTP/1.1 200 OK
-        prn Transfer-Encoding: chunked
-        prn
-        chunk '
+<a href='$espresso_build_apk'>espresso build apk</a>
+"
+  chunk
+}
+
+espresso_build_apk=/`echo -n espresso build apk | sha1sum | awk '{print$1}'`
+espresso_build_apk() {
+  # TODO Content-Type
+  prn HTTP/1.1 200 OK
+  prn Transfer-Encoding: chunked
+  prn
+  chunk '
 <!doctype html>
 <style>
 label:after {
@@ -114,20 +116,36 @@ label:after {
   <input type="submit" value="apply">
 </form>
 '
-        chunk
-        ;;
-      (POST)
-        prn HTTP/1.1 200 OK
-        prn Transfer-Encoding: chunked
-        prn Content-Type: text/plain
-        prn
-        chunk "`env`"
-        chunk
-        ;;
-      (*)
-        echo meh >&2
-        method_not_allowed
-        ;;
+  chunk
+}
+
+espresso_build_apk_apply() {
+  prn HTTP/1.1 200 OK
+  prn Transfer-Encoding: chunked
+  prn Content-Type: text/plain
+  prn
+  chunk "`env`"
+  chunk
+}
+
+case "$URL" in
+  ($homepage)
+    case "$METHOD" in
+      (GET) homepage ;;
+      (*) method_not_allowed ;;
+    esac
+    ;;
+  ($account_overview)
+    case "$METHOD" in
+      (GET) account_overview ;;
+      (*) method_not_allowed ;;
+    esac
+    ;;
+  ($espresso_build_apk)
+    case "$METHOD" in
+      (GET) espresso_build_apk ;;
+      (POST) espresso_build_apk_apply ;;
+      (*) method_not_allowed ;;
     esac
     ;;
   (*)
