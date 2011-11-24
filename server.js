@@ -10,6 +10,11 @@ var root_path = (function () {
 
 function listener (req, res) {
 
+  var log = require('./log').create();
+
+  log.raw([req.method, req.url, 'HTTP/' + req.httpVersion].join(' '));
+  log.format(req.headers);
+
   // don't time out...
   res.socket.setTimeout(0 * 60 * 1000);
 
@@ -18,7 +23,7 @@ function listener (req, res) {
 
   var options = {
     env: {}, //JSON.parse(JSON.stringify(process.env)),
-    customFds: [-1, -1, 2]
+    //customFds: [-1, -1, 2]
   };
 
   options.env.METHOD = req.method;
@@ -34,16 +39,12 @@ function listener (req, res) {
     data += chunk;
   });
   
-  //child.stderr.on('data', function (chunk) {
-  //  //var prefix = 'child stderr: ';
-  //  //console.log(prefix +
-  //  //    chunk.toString()
-  //  //    .replace(/\n$/,'')
-  //  //    .replace(/\n/g, '\n' + prefix)
-  //  //);
-  //});
+  child.stderr.on('data', function (chunk) {
+    log.raw(chunk.toString(), '[31m');
+  });
   
   child.on('exit', function (code) {
+    log.format('child', 'exit', code);
     if (code === 0) {
       res.socket.end(data);
       //var content = data;
@@ -53,7 +54,6 @@ function listener (req, res) {
       //});
       //res.end(content);
     } else {
-      console.error('child exit:', code);
       res.writeHead(500, {
         'Content-Length': 0
       });
