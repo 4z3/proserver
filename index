@@ -1,0 +1,12 @@
+#! /bin/sh
+set -euf
+
+realpath() {
+  readlink -f "$1"
+}
+
+root_path="$(dirname "$(realpath "$0")")"
+
+while node $root_path/server.js; do
+  echo '[35mcycling...[m' >&2
+done
