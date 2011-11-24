@@ -92,8 +92,6 @@ function listener (req, res) {
 
   var log = require('./log').create();
 
-  var form_files = [];
-
   log.raw([req.method, req.url, 'HTTP/' + req.httpVersion].join(' '));
   log.format(req.headers);
   var re = new RegExp('^multipart/form-data(?:;|$)');
@@ -101,22 +99,25 @@ function listener (req, res) {
     var form = new require('formidable').IncomingForm();
 
     form.parse(req, function(err, fields, files) {
-      form_files = files;
       log.format(fields);
       log.format(files);
-    });
-  };
 
-  handle_externally(req, res, log, function () {
-    var fs = require('fs');
-    Object.keys(form_files).forEach(function (key) {
-      var file = form_files[key];
-      fs.unlink(file.path, function (exn) {
-        log.format('unlink', file.path, exn);
+      handle_externally(req, res, log, function () {
+        var fs = require('fs');
+        Object.keys(files).forEach(function (key) {
+          var file = files[key];
+          fs.unlink(file.path, function (exn) {
+            log.format('unlink', file.path, exn);
+          });
+        });
       });
     });
-  });
 
+  } else {
+    handle_externally(req, res, log, function () {
+      // nop
+    });
+  };
 };
 
 (function () {
