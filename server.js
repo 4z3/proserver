@@ -81,16 +81,6 @@ var handle_externally = (function () {
   };
 })();
 
-function identity(x) { return x };
-function replace_properties(dst, src, mod) {
-  dst_key_mod = mod.dst_key_mod || identity;
-  src_val_mod = mod.src_val_mod || identity;
-
-  Object.keys(src).forEach(function (key) {
-    dst[dst_key_mod(key)] = src_val_mod(src[key]);
-  });
-};
-
 function listener (req, res) {
 
   // don't time out...
@@ -123,18 +113,13 @@ function listener (req, res) {
 
       // TODO whitelist fields and files?
       var env = {};
-      replace_properties(env, fields, {
-        dst_key_mod: function (key) {
-          return 'TEXT_' + key;
-        }
+      Object.keys(fields).forEach(function (key) {
+        env['TEXT_' + key] = fields[key];
       });
-      replace_properties(env, files, {
-        dst_key_mod: function (key) {
-          return 'FILE_' + key;
-        },
-        src_val_mod: function (value) {
-          return value.path;
-        }
+      Object.keys(files).forEach(function (key) {
+        env['FILE_' + key] = files[key].path;
+        env['FILE_' + key + '_SIZE'] = files[key].size;
+        env['FILE_' + key + '_TYPE'] = files[key].type;
       });
 
       handle_externally(req, res, { log: log, env: env }, function () {

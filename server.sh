@@ -124,7 +124,8 @@ espresso_build_apk_apply() {
   prn Transfer-Encoding: chunked
   prn Content-Type: text/plain
   prn
-  chunkln "`env`"
+  chunkln "date: `date --utc --rfc-3339=ns`"
+  chunkln "`env | sort`"
   chunkln "archive type: `file -ib "$FILE_archive"`"
   chunkln "archive size: `wc -c "$FILE_archive" | awk '{print$1}'`"
   chunk
