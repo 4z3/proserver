@@ -11,6 +11,9 @@ var root_path = (function () {
 
 var handle_externally = (function () {
 
+  var spawn = require('child_process').spawn;
+  var path = require('path');
+
   return function (req, res, options, callback) {
     var log = options.log;
     var env = JSON.parse(JSON.stringify(options.env)); // copy
@@ -18,12 +21,17 @@ var handle_externally = (function () {
     env.METHOD = req.method;
     env.URL = req.url;
 
-    var spawn = require('child_process').spawn;
-    var path = require('path');
-    var child  = spawn(path.join(root_path, 'server.sh'), [], {
-      cwd: root_path,
-      env: env
-    });
+    var child = (function () {
+      var command = path.join(root_path, 'server.sh');
+      var spawn_options = {
+        cwd: root_path,
+        env: env
+      };
+
+      log.format('spawn', { command: command, options: spawn_options });
+
+      return spawn(command, [], spawn_options);
+    })();
 
     // TODO minimal buffering
     var data = [];
@@ -39,16 +47,11 @@ var handle_externally = (function () {
     child.on('exit', function (code) {
       log.format('child', 'exit', code);
       if (code === 0) {
+        // TODO do we have a use case to not generate the whole HTTP response?
         data.forEach(function (chunk) {
           res.socket.write(chunk);
         });
         res.socket.end();
-        //var content = data;
-        //res.writeHead(200, {
-        //  'Content-Type': 'text/plain',
-        //  'Content-Length': content.length
-        //});
-        //res.end(content);
       } else {
         res.writeHead(500, {
           'Content-Length': 0
