@@ -17,17 +17,17 @@ chunkln() {
 }
 
 not_found() {
-    prn HTTP/1.1 404 Not Found
-    prn Content-Length: 0
-    prn Connection: close
-    prn
+  prn HTTP/1.1 404 Not Found
+  prn Content-Length: 0
+  prn Connection: close
+  prn
 }
 
 method_not_allowed() {
-    prn HTTP/1.1 405 Method Not Allowed
-    prn Content-Length: 0
-    prn Connection: close
-    prn
+  prn HTTP/1.1 405 Method Not Allowed
+  prn Content-Length: 0
+  prn Connection: close
+  prn
 }
 
 input_text() {
