@@ -1,0 +1,127 @@
+#! /bin/sh
+set -xeu
+
+export PATH="/more/mway/android-sdk-linux/platform-tools:/more/mway/android-sdk-linux/tools:/usr/share/java/apache-ant/bin${PATH+:$PATH}"
+
+# configuration
+build_dir="$PWD/src"
+phonegap_dir="/more/mway/Espresso/submodules/github/callback/phonegap"
+sdk="${TEXT_sdk}"
+mode="debug"
+activity="${TEXT_activity-MyActivity}"
+package="${TEXT_package-com.test.mypackage}"
+
+# TODO validate $sdk
+# TODO validate $mode
+# TODO validate $activity
+# TODO validate $package
+# TODO validate $build_dir [i.e. $build_dir/index.html]
+
+if test "$mode" = release; then
+  keystore="${keystore}"
+  keyalias="${keyalias}"
+  # optional: storepass, keypass
+  # TODO validate $keystore
+  apk_basename="$activity.apk"
+else
+  apk_basename="$activity-$mode.apk"
+fi
+
+# setup self-destructive working directory
+# TODO set TMPDIR in server.js
+cd "`mktemp -d "$PWD/tmp/package-phonegap-android.XXXXXXXXXX"`"
+trap "cd '$OLDPWD'; rm -fR '$PWD'" EXIT INT QUIT
+ln -s "$phonegap_dir/Android" phonegap
+ln -s "$build_dir" src
+
+# create android project directory
+android create project \
+    --path android-project \
+    --activity "$activity" \
+    --package "$package" \
+    --target "$sdk"
+mkdir android-project/assets
+
+# copy application files into android project directory
+cp -R src/* android-project/assets/
+# remove potential cruft
+rm -f android-project/assets/config.json
+rm -f android-project/assets/*.apk
+
+# copy phonegap files into the android project directory
+cp phonegap/phonegap-*.js android-project/assets/phonegap.js
+cp phonegap/phonegap-*.jar android-project/libs/phonegap.jar
+cp -R phonegap/xml android-project/res/
+
+#! /bin/sh
+#
+# `gsedi file script` is similar to GNU sed's `sed -i script file`
+#
+gsedi() {
+  mv "$1" "$1.orig"
+  sed "$2" "$1.orig" > "$1"
+  rm "$1.orig"
+}
+
+# update android project files to use phonegap
+gsedi android-project/src/`echo $package | tr . /`/$activity.java '
+  s|extends Activity|extends DroidGap|
+  s|setContentView([^)]*);|\
+    super.setIntegerProperty("loadUrlTimeoutValue", 60000);\
+    super.loadUrl("file:///android_asset/index.html");|
+  s|import android.app.Activity|import com.phonegap.*|
+'
+gsedi android-project/AndroidManifest.xml '
+  s|.*versionName.*|&\
+    <supports-screens\
+            android:largeScreens="true"\
+            android:normalScreens="true"\
+            android:smallScreens="true"\
+            android:resizeable="true"\
+            android:anyDensity="true"\
+            />\
+    <uses-permission android:name="android.permission.CAMERA" />\
+    <uses-permission android:name="android.permission.VIBRATE" />\
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\
+    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />\
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />\
+    <uses-permission android:name="android.permission.INTERNET" />\
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />\
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />\
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\
+    <uses-permission android:name="android.permission.READ_CONTACTS" />\
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />\
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />\
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />|
+'
+gsedi android-project/assets/index.html '
+  s|\(</\?\)[sS][cC][rR][iI][pP][tT]|\1script|g
+  1,/<script/{
+    s|\(.*\)\(<script.*\)|\1\<script type="application/javascript" src="phonegap.js"></script>\
+<script type="application/javascript">var isPhoneGap = true;</script>\
+\2|
+  }
+'
+
+# build android package
+(cd android-project && ant --noconfig "$mode")
+
+if test "$mode" = release; then
+  # sign and align android package in release mode
+  jarsigner -verbose \
+      -keystore "$keystore" \
+      ${storepass+-storepass "$storepass"} \
+      ${keypass+-keypass "$keypass"} \
+      -signedjar android-project/bin/$activity-unaligned.apk \
+      android-project/bin/$activity-unsigned.apk \
+      "$keyalias"
+  zipalign -v 4 android-project/bin/$activity-unaligned.apk \
+      android-project/bin/$apk_basename
+fi
+
+# emit android package
+#cp android-project/bin/$apk_basename "$build_dir/$apk_basename"
+
+rm -fR $OLDPWD/src
+mv android-project/bin/$apk_basename $OLDPWD/src

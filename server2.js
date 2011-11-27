@@ -15,17 +15,13 @@ var path = require('path');
 // all keys are `echo -n '{name}' | sha1sum | awk '{print$1}'`
 // TODO spec.json, desc
 var primitive_program_table = {
-  "/48f6c938093e69dfbcb4318cb951dcfccf38bb77": {
-    "name": "unpack zip",
-    "command": path.join(root_path, 'components', 'unpack-zip', 'index')
+  "/eefffcb0e1ac7d638f1e5fa98d62b7ef79e2652d": {
+    "name": "unpack archive",
+    "command": path.join(root_path, 'components', 'unpack-archive', 'index')
   },
   "/7f3be10a123829d7cdd1b7a8e76b0dcf20a7ea45": {
     "name": "espresso build",
     "command": path.join(root_path, 'components', 'espresso-build', 'index')
-  },
-  "/2051e356315369af9de36fab804f6e83175b3828": {
-    "name": "pack zip",
-    "command": path.join(root_path, 'components', 'pack-zip', 'index')
   },
   "/9fa4a451844a412af7dc7655863c3a245744aad3": {
     "name": "package PhoneGap/Android",
@@ -35,37 +31,19 @@ var primitive_program_table = {
     "name": "sendsrc",
     "command": path.join(root_path, 'components', 'sendsrc', 'index')
   },
-  "/test": {
-    "name": "primitive test program",
-    "command": path.join(root_path, 'server.sh')
-  }
 };
 var program_table = {
   "/dec438b22939a4c1d74bf070aa93e9745b913d82": {
     "name": "espresso build Android package",
     "program": [
       // TODO? "upload"
-      "/48f6c938093e69dfbcb4318cb951dcfccf38bb77", // unpack zip
+      "/eefffcb0e1ac7d638f1e5fa98d62b7ef79e2652d", // unpack archive
       "/7f3be10a123829d7cdd1b7a8e76b0dcf20a7ea45", // espresso build
       "/9fa4a451844a412af7dc7655863c3a245744aad3", // package PhoneGap/Android
       "/2af293fe70e5be472f10b4165467ba05e5831380", // sendsrc
       // TODO? "download"
     ]
   },
-  "test": {
-    "name": "test program",
-    "program": [
-      "/dec438b22939a4c1d74bf070aa93e9745b913d82",
-      "/test finish"
-    ]
-  },
-  "/test finish": {
-    "name": "test finish program",
-    "program": [
-      "/invalid-program"
-    ]
-  }
-  
 };
 
 // TODO

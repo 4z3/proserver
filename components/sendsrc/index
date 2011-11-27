@@ -1,0 +1,18 @@
+#! /bin/sh
+set -xeuf
+
+test -f src
+
+type="`file -ib src`"
+length=`wc -c src | awk '{print$1}'`
+
+cat<<EOF
+HTTP/1.1 200 OK
+Content-Type: $type
+Content-Length: $length${TEXT_filename+
+Content-Disposition: attachment; filename=$TEXT_filename}
+Connection: close
+
+EOF
+
+dd if=src bs=$length

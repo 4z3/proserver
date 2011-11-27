@@ -1,0 +1,20 @@
+#! /bin/sh
+set -xeuf
+
+mkdir -p tmp
+
+cd src
+
+# remove any potential build directory
+rm -fR build
+
+/more/mway/Espresso/bin/espresso.js build
+
+# Note: we know there can only one directory in build/!
+name="`cd build && ls`"
+
+# replace src with the build 
+mv build/$name ../tmp
+cd ..
+rm -fR src
+mv tmp/$name src

@@ -1,0 +1,10 @@
+#! /bin/sh
+set -xeuf
+
+mkdir -p src
+
+# TODO validate $FILE_archive
+
+cd src
+7z x "$FILE_archive"
+

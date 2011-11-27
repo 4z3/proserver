@@ -1,0 +1,39 @@
+<!doctype html>
+<style>
+label:after{content:": ";}
+</style>
+<title>espresso build apk</title>
+<h1>espresso build apk</h1>
+<form method="post" enctype="multipart/form-data"
+      action="https://localhost:8000/dec438b22939a4c1d74bf070aa93e9745b913d82">
+
+  <fieldset><legend>upload configuration</legend>
+    <ul>
+      <li><label for="archive">Source archive</label><input id="archive" type="file" name="archive" accept="application/zip"></li>
+    </ul>
+  </fieldset>
+
+  <fieldset><legend>espresso build configuration</legend>
+  </fieldset>
+
+  <fieldset><legend>package configuration</legend>
+    <ul>
+      <li>
+        <label for="sdk">SDK</label>
+        <select id="sdk" name="sdk">
+          <option selected="selected" value="android-7">Android 2.1</option>
+        </select>
+      </li>
+      <li><label for="package">Package name</label><input id="package" type="text" name="package" value="com.test.helloworld"></li>
+      <li><label for="activity">Activity name</label><input id="activity" type="text" name="activity" value="HelloWorld"></li>
+    </ul>
+  </fieldset>
+
+  <fieldset><legend>download configuration</legend>
+    <ul>
+      <li><label for="filename">Download filename</label><input id="filename" type="text" name="filename" value="HelloWorld.apk"></li>
+    </ul>
+  </fieldset>
+
+  <input type="submit" value="apply">
+</form>
