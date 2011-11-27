@@ -99,7 +99,7 @@ var handle_externally = (function _init_handle_externally () {
               // TODO merge some optionally predefined program.envp
               var argv = program.argv || [];
               var spawn_options = {
-                cwd: root_path,
+                cwd: options.cwd || root_path,
                 env: env
               };
 
@@ -180,57 +180,57 @@ var handle_externally = (function _init_handle_externally () {
       res.end();
       callback(); // TODO error
     };
+  };
+})();
 
-    return; // old code below
 
-    // the external handler may run a long time... don't time out.
-    res.socket.setTimeout(0 * 60 * 1000);
+var mktempdir = (function _init_mktempdir () {
+  var uuid = require('node-uuid');
+  var fs = require('fs');
+  var path = require('path');
+  return function _mktempdir (callback) {
+    // TODO portable path
+    var dirname = path.join('/tmp', uuid());
+    var mode = '0700'
+    fs.mkdir(dirname, mode, function (err) {
+      // TODO cycle
+      callback(err, dirname);
+    });
+  };
+})();
 
-    var log = options.log;
-    var env = JSON.parse(JSON.stringify(options.env)); // copy
-
-    env.METHOD = req.method;
-    env.URL = req.url;
-
-    var child = (function _init_child () {
-      var command = path.join(root_path, 'server.sh');
-      var spawn_options = {
-        cwd: root_path,
-        env: env
+var rmfR = (function _init_rmfR () {
+  var fs = require('fs');
+  var path = require('path');
+  return function _rmfR (name, callback) {
+    fs.stat(name, function(err, stat) {
+      if (err) {
+        console.error('stat Error', err);
       };
-
-      log.format('spawn', { command: command, options: spawn_options });
-
-      return spawn(command, [], spawn_options);
-    })();
-
-    // TODO minimal buffering
-    var data = [];
-
-    child.stdout.on('data', function _cb_buffer_res_chunk (chunk) {
-      data.push(chunk);
-    });
-    
-    child.stderr.on('data', function _cb_write_child_stderr (chunk) {
-      log.raw(chunk.toString(), '[31m');
-    });
-    
-    child.on('exit', function _cb_child_exited (code) {
-      log.format('child', 'exit', code);
-      if (code === 0) {
-        // TODO do we have a use case to not generate the whole HTTP response?
-        data.forEach(function _cb_write_res_chunks (chunk) {
-          res.socket.write(chunk);
+      if (stat.isFile()) {
+        fs.unlink(name, function (err) {
+          console.log('unlink', name, err);
+          callback(null);
         });
-        res.socket.end();
       } else {
-        res.writeHead(500, {
-          'Content-Length': 0
+        fs.readdir(name, function (err, files) {
+          if (err) {
+            console.error('readdir Error', err);
+            callback(null);
+          } else {
+            (function _rec () {
+              if (files.length > 0) {
+                _rmfR(path.join(name, files.pop()), _rec);
+              } else {
+                fs.rmdir(name, function (err) {
+                  console.log('rmdir', name, err);
+                  callback(null);
+                });
+              };
+            })();
+          };
         });
-        res.end();
       };
-
-      callback();
     });
   };
 })();
@@ -245,47 +245,61 @@ var listener = (function _init_listener () {
     if (re.test(req.headers['content-type'])) {
       var form = new require('formidable').IncomingForm();
 
-      form.parse(req, function(err, fields, files) {
-
-        (function _scope_pretty_print_form () {
-          var pretty = {};
-          Object.keys(fields).forEach(function _cb_cpy_fields (key) {
-            pretty[key] = fields[key];
+      mktempdir(function (err, tempdir_path) {
+        if (err) {
+          log.raw('mktempdir err:' + err, '[31;1m');
+          res.writeHead(500, {
+            'Content-Length': 0
           });
-          Object.keys(files).forEach(function _cb_cpy_partial_files (key) {
-            pretty[key] = {};
-            [ 'name', 'size', 'type', 'path'
-            ].forEach(function _cb_cpy_some_file_props (property) {
-              pretty[key][property] = files[key][property];
+          res.end();
+        } else {
+          log.format('tempdir_path', tempdir_path);
+          form.parse(req, function(err, fields, files) {
+            (function _scope_pretty_print_form () {
+              var pretty = {};
+              Object.keys(fields).forEach(function _cb_cpy_fields (key) {
+                pretty[key] = fields[key];
+              });
+              Object.keys(files).forEach(function _cb_cpy_partial_files (key) {
+                pretty[key] = {};
+                [ 'name', 'size', 'type', 'path'
+                ].forEach(function _cb_cpy_some_file_props (property) {
+                  pretty[key][property] = files[key][property];
+                });
+              });
+              log.format(pretty);
+            })();
+
+            // TODO whitelist fields and files?
+            var env = {};
+            Object.keys(fields).forEach(function _cb_export_fields (key) {
+              env['TEXT_' + key] = fields[key];
+            });
+            Object.keys(files).forEach(function _cb_export_files (key) {
+              env['FILE_' + key] = files[key].path;
+              env['FILE_' + key + '_SIZE'] = files[key].size;
+              env['FILE_' + key + '_TYPE'] = files[key].type;
+            });
+
+            var options = {
+              log: log,
+              env: env,
+              cwd: tempdir_path
+            };
+            handle_externally(req, res, options, function _cb_form_cleanup () {
+              var fs = require('fs');
+              Object.keys(files).forEach(function _cb_unlink_files (key) {
+                var file = files[key];
+                fs.unlink(file.path, function _cb_file_unlinked (exn) {
+                  log.format('unlink', file.path, exn);
+                });
+              });
+              rmfR(tempdir_path, function (err) {
+                log.format('rm -fR', tempdir_path, err);
+              });
             });
           });
-          log.format(pretty);
-        })();
-
-        // TODO whitelist fields and files?
-        var env = {};
-        Object.keys(fields).forEach(function _cb_export_fields (key) {
-          env['TEXT_' + key] = fields[key];
-        });
-        Object.keys(files).forEach(function _cb_export_files (key) {
-          env['FILE_' + key] = files[key].path;
-          env['FILE_' + key + '_SIZE'] = files[key].size;
-          env['FILE_' + key + '_TYPE'] = files[key].type;
-        });
-
-        var options = {
-          log: log,
-          env: env
         };
-        handle_externally(req, res, options, function _cb_form_cleanup () {
-          var fs = require('fs');
-          Object.keys(files).forEach(function _cb_unlink_files (key) {
-            var file = files[key];
-            fs.unlink(file.path, function _cb_file_unlinked (exn) {
-              log.format('unlink', file.path, exn);
-            });
-          });
-        });
       });
 
     } else {
