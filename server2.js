@@ -27,6 +27,14 @@ var primitive_program_table = {
     "name": "pack zip",
     "command": path.join(root_path, 'components', 'pack-zip', 'index')
   },
+  "/9fa4a451844a412af7dc7655863c3a245744aad3": {
+    "name": "package PhoneGap/Android",
+    "command": path.join(root_path, 'components', 'package-apk', 'index')
+  },
+  "/2af293fe70e5be472f10b4165467ba05e5831380": {
+    "name": "sendsrc",
+    "command": path.join(root_path, 'components', 'sendsrc', 'index')
+  },
   "/test": {
     "name": "primitive test program",
     "command": path.join(root_path, 'server.sh')
@@ -39,7 +47,8 @@ var program_table = {
       // TODO? "upload"
       "/48f6c938093e69dfbcb4318cb951dcfccf38bb77", // unpack zip
       "/7f3be10a123829d7cdd1b7a8e76b0dcf20a7ea45", // espresso build
-      "/2051e356315369af9de36fab804f6e83175b3828", // pack zip
+      "/9fa4a451844a412af7dc7655863c3a245744aad3", // package PhoneGap/Android
+      "/2af293fe70e5be472f10b4165467ba05e5831380", // sendsrc
       // TODO? "download"
     ]
   },
@@ -72,9 +81,10 @@ var handle_externally = (function _init_handle_externally () {
 
   return function _impl_handle_externally (req, res, options, callback) {
 
+    var log = options.log;
+
     if (req.method === 'POST') {
 
-      var log = options.log;
       var env = JSON.parse(JSON.stringify(options.env)); // copy
 
       // the external handler may run a long time... don't time out.
@@ -236,50 +246,56 @@ var rmfR = (function _init_rmfR () {
 })();
 
 var listener = (function _init_listener () {
+  
+  var IncomingForm = require('formidable').IncomingForm;
+  var Logger = require('./log');
+
   return function _impl_listener (req, res) {
-    var log = require('./log').create();
+    var log = Logger.create();
 
     log.raw([req.method, req.url, 'HTTP/' + req.httpVersion].join(' '));
     log.format(req.headers);
     var re = new RegExp('^multipart/form-data(?:;|$)');
     if (re.test(req.headers['content-type'])) {
-      var form = new require('formidable').IncomingForm();
+      var form = new IncomingForm();
 
-      mktempdir(function (err, tempdir_path) {
-        if (err) {
-          log.raw('mktempdir err:' + err, '[31;1m');
-          res.writeHead(500, {
-            'Content-Length': 0
+      form.parse(req, function(err, fields, files) {
+
+        (function _scope_pretty_print_form () {
+          var pretty = {};
+          Object.keys(fields).forEach(function _cb_cpy_fields (key) {
+            pretty[key] = fields[key];
           });
-          res.end();
-        } else {
-          log.format('tempdir_path', tempdir_path);
-          form.parse(req, function(err, fields, files) {
-            (function _scope_pretty_print_form () {
-              var pretty = {};
-              Object.keys(fields).forEach(function _cb_cpy_fields (key) {
-                pretty[key] = fields[key];
-              });
-              Object.keys(files).forEach(function _cb_cpy_partial_files (key) {
-                pretty[key] = {};
-                [ 'name', 'size', 'type', 'path'
-                ].forEach(function _cb_cpy_some_file_props (property) {
-                  pretty[key][property] = files[key][property];
-                });
-              });
-              log.format(pretty);
-            })();
+          Object.keys(files).forEach(function _cb_cpy_partial_files (key) {
+            pretty[key] = {};
+            [ 'name', 'size', 'type', 'path'
+            ].forEach(function _cb_cpy_some_file_props (property) {
+              pretty[key][property] = files[key][property];
+            });
+          });
+          log.format(pretty);
+        })();
 
-            // TODO whitelist fields and files?
-            var env = {};
-            Object.keys(fields).forEach(function _cb_export_fields (key) {
-              env['TEXT_' + key] = fields[key];
+        // TODO whitelist fields and files?
+        var env = {};
+        Object.keys(fields).forEach(function _cb_export_fields (key) {
+          env['TEXT_' + key] = fields[key];
+        });
+        Object.keys(files).forEach(function _cb_export_files (key) {
+          env['FILE_' + key] = files[key].path;
+          env['FILE_' + key + '_SIZE'] = files[key].size;
+          env['FILE_' + key + '_TYPE'] = files[key].type;
+        });
+
+        mktempdir(function (err, tempdir_path) {
+          if (err) {
+            log.raw('mktempdir err:' + err, '[31;1m');
+            res.writeHead(500, {
+              'Content-Length': 0
             });
-            Object.keys(files).forEach(function _cb_export_files (key) {
-              env['FILE_' + key] = files[key].path;
-              env['FILE_' + key + '_SIZE'] = files[key].size;
-              env['FILE_' + key + '_TYPE'] = files[key].type;
-            });
+            res.end();
+          } else {
+            log.format('tempdir_path', tempdir_path);
 
             var options = {
               log: log,
@@ -298,8 +314,8 @@ var listener = (function _init_listener () {
                 log.format('rm -fR', tempdir_path, err);
               });
             });
-          });
-        };
+          };
+        });
       });
 
     } else {
