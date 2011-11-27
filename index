@@ -7,6 +7,6 @@ realpath() {
 
 root_path="$(dirname "$(realpath "$0")")"
 
-while node $root_path/server.js; do
+while node $root_path/server2.js; do
   echo '[35mcycling...[m' >&2
 done
