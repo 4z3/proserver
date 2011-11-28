@@ -1,0 +1,20 @@
+#! /bin/sh
+set -xeuf
+
+mkdir -p tmp
+
+mv src tmp/generate_manifest.src
+
+cat>src<<EOF
+CACHE MANIFEST
+# Timestamp: `date -u --rfc-3339=ns`
+CACHE:
+`cd tmp/generate_manifest.src
+  find . -type f | sed 's:\./::'`
+
+NETWORK:
+*
+EOF
+
+echo text/cache-manifest > src.mime-type
+
