@@ -243,6 +243,7 @@ var listener = (function _init_listener () {
   
   var IncomingForm = require('formidable').IncomingForm;
   var Logger = require('./log');
+  var url = require('url');
 
   return function _impl_listener (req, res) {
     var log = Logger.create();
@@ -281,6 +282,8 @@ var listener = (function _init_listener () {
           env['FILE_' + key + '_TYPE'] = files[key].type;
         });
 
+        // TODO? load environment from query string
+
         mktempdir(function (err, tempdir_path) {
           if (err) {
             log.raw('mktempdir err:' + err, '[31;1m');
@@ -313,11 +316,39 @@ var listener = (function _init_listener () {
       });
 
     } else {
-      var options = {
-        log: log,
-        env: {}
-      };
-      handle_externally(req, res, options, function _cb_nop () {});
+
+      var env = {};
+
+      mktempdir(function (err, tempdir_path) {
+        if (err) {
+          log.raw('mktempdir err:' + err, '[31;1m');
+          res.writeHead(500, {
+            'Content-Length': 0
+          });
+          res.end();
+        } else {
+          log.format('tempdir_path', tempdir_path);
+
+          // load environment from query string
+          req.url = url.parse(req.url, true);
+          Object.keys(req.url.query).forEach(function (key) {
+            env['TEXT_' + key] = req.url.query[key];
+          });
+          req.url = req.url.pathname;
+
+          var options = {
+            log: log,
+            env: env,
+            cwd: tempdir_path
+          };
+          handle_externally(req, res, options, function _cb_noformclean () {
+            rmfR(tempdir_path, function (err) {
+              log.format('rm -fR', tempdir_path, err);
+            });
+          });
+        };
+      });
+
     };
   };
 })();
