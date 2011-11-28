@@ -60,7 +60,10 @@ PORT = 4443 if SSL else 80
  
 def do_request(connstream, from_addr):
     x = object()
-    http.server.SimpleHTTPRequestHandler.extensions_map = {'': 'text/html'}
+    http.server.SimpleHTTPRequestHandler.extensions_map = {
+      '': 'text/html',
+      '.zip': 'application/zip'
+    }
     http.server.SimpleHTTPRequestHandler(connstream, from_addr, x)
  
 def serve():
