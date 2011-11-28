@@ -1,0 +1,30 @@
+#! /bin/sh
+set -xeuf
+
+url="${TEXT_url}"
+
+# quota saves us from bad urls
+quota="2M"
+
+cut_dirs="`echo -n "$url" |
+  sed -n 's|[^:]*://\(.*\)/\([^/]*\)$|\1|p' |
+  cut -d/ -f2- |
+  sed 's:[^/]::g' |
+  wc -c
+`"
+
+# TODO? check if src is empty
+mkdir -p src
+
+cd src
+
+#wget --no-verbose --mirror --input-file=- <<EOF
+{
+  wget -nv -nH --cut-dirs=$cut_dirs -r -l inf -i - -Q $quota
+}<<EOF
+$url
+EOF
+
+# remove potential cruft
+rm -f robots.txt || :
+
