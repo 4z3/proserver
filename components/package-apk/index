@@ -125,3 +125,4 @@ fi
 
 rm -fR $OLDPWD/src
 mv android-project/bin/$apk_basename $OLDPWD/src
+echo application/vnd.android.package-archive > $OLDPWD/src.mime-type
