@@ -1,8 +1,11 @@
 <!doctype html>
-<title>account overview</title>
-<h1>account overview</h1>
-<a href='/'>logout</a>
-<h2>programs</h2>
+<title>Espresso Theatre API / account overview</title>
+<h1>Espresso Theatre API</h1>
+<h2>account overview</h2>
+The account overview shows all available programs.
+<h3>available programs</h3>
+Click on a link to retrieve the corresponding program page,
+where it can be executed.
 <ul>
   <li>
     <a href='/dec438b22939a4c1d74bf070aa93e9745b913d82'>espresso build apk</a>

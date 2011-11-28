@@ -3,7 +3,21 @@
 label:after{content:": ";}
 </style>
 <title>espresso build apk</title>
-<h1>espresso build apk</h1>
+<h1>Espresso Theatre API</h1>
+<h2>espresso build apk program page</h2>
+This program generates a PhoneGap/Android package from the provided
+Espresso project ZIP archive.
+<h3>notes</h3>
+<ul>
+  <li>
+    The archive should contain an Espresso project, i.e.
+    <tt>app/</tt>, <tt>config.json</tt>, and optionally
+    <tt>frameworks/</tt>.
+  </li>
+  <li>An example archive can be found <a href="/example.zip">here</a>.
+  <li>Any error is treated as internal server error.</li>
+</ul>
+<h3>execute program</h3>
 <form method="post" enctype="multipart/form-data"
       action="https://localhost:8000/dec438b22939a4c1d74bf070aa93e9745b913d82">
 
@@ -11,15 +25,6 @@ label:after{content:": ";}
     <ul>
       <li>
       <label for="archive">Source archive</label><input id="archive" type="file" name="archive" accept="application/zip">
-        <ul>
-          <li>
-            The archive should contain an Espresso project, i.e.
-            <tt>app/</tt>, <tt>config.json</tt>, and optionally
-            <tt>frameworks/</tt>.
-            An example archive can be found
-            <a href="/example.zip">here</a>.
-          </li>
-        </ul>
       </li>
     </ul>
   </fieldset>
@@ -55,12 +60,12 @@ label:after{content:": ";}
   <input type="submit" value="execute">
 </form>
 
-<h2>curl example</h2>
+<h3>curl example</h3>
 <pre>
   time curl -F sdk=android-7 -F archive=@example.zip -ksS https://localhost:8000/dec438b22939a4c1d74bf070aa93e9745b913d82 > HelloWorld-debug.apk
 </pre>
 
-<h2>HATEOAS example</h2>
+<h3>HATEOAS example</h3>
 This example outlines how a
 <a href="https://en.wikipedia.org/wiki/HATEOAS">HATEOAS</a>-client
 could login, find, and execute this program (MOD error checking).

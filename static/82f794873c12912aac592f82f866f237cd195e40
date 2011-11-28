@@ -4,7 +4,19 @@ label:after{content:": ";}
 #url{width:42%;}
 </style>
 <title>generate manifest from URL</title>
-<h1>generate manifest from URL</h1>
+<h1>Espresso Theatre API</h1>
+<h2>generate manifest from URL program page</h2>
+This program fetches all resources accessible through an URL
+and generates an HTML5 manifest file.
+<h3>notes</h3>
+<ul>
+  <li>The program will try to download all resources reachable
+  from the provided URL.</li>
+  <li>The program will signal an error if the
+  provided URL points to more than 2MiB of data.</li>
+  <li>Any error is treated as internal server error.</li>
+</ul>
+<h3>execute program</h3>
 <form method="post" enctype="multipart/form-data"
       action="https://localhost:8000/82f794873c12912aac592f82f866f237cd195e40">
 
@@ -26,12 +38,12 @@ label:after{content:": ";}
   <input type="submit" value="execute">
 </form>
 
-<h2>curl example</h2>
+<h3>curl example</h3>
 <pre>
   time curl -ksS -X POST https://localhost:8000/82f794873c12912aac592f82f866f237cd195e40?url=http://the-m-project.org/apps/todos2/index.html
 </pre>
 
-<h2>HATEOAS example</h2>
+<h3>HATEOAS example</h3>
 This example outlines how a
 <a href="https://en.wikipedia.org/wiki/HATEOAS">HATEOAS</a>-client
 could login, find, and execute this program (MOD error checking).
