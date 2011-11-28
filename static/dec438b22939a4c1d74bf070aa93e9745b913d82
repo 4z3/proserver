@@ -9,7 +9,18 @@ label:after{content:": ";}
 
   <fieldset><legend>upload configuration</legend>
     <ul>
-      <li><label for="archive">Source archive</label><input id="archive" type="file" name="archive" accept="application/zip"></li>
+      <li>
+      <label for="archive">Source archive</label><input id="archive" type="file" name="archive" accept="application/zip">
+        <ul>
+          <li>
+            The archive should contain an Espresso project, i.e.
+            <tt>app/</tt>, <tt>config.json</tt>, and optionally
+            <tt>frameworks/</tt>.
+            An example archive can be found
+            <a href="/example.zip">here</a>.
+          </li>
+        </ul>
+      </li>
     </ul>
   </fieldset>
 
@@ -22,6 +33,12 @@ label:after{content:": ";}
         <label for="sdk">SDK</label>
         <select id="sdk" name="sdk">
           <option selected="selected" value="android-7">Android 2.1</option>
+          <option value="android-8">Android 2.2</option>
+          <option value="android-10">Android 2.3.3</option>
+          <option value="android-11">Android 3.0</option>
+          <option value="android-12">Android 3.1</option>
+          <option value="android-13">Android 3.2</option>
+          <option value="android-14">Android 4.0</option>
         </select>
       </li>
       <li><label for="package">Package name</label><input id="package" type="text" name="package" value="com.test.helloworld"></li>
@@ -31,7 +48,7 @@ label:after{content:": ";}
 
   <fieldset><legend>download configuration</legend>
     <ul>
-      <li><label for="filename">Download filename</label><input id="filename" type="text" name="filename" value="HelloWorld.apk"></li>
+      <li><label for="filename">Download filename</label><input id="filename" type="text" name="filename" value="HelloWorld-debug.apk"></li>
     </ul>
   </fieldset>
 
