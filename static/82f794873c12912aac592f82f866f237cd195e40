@@ -1,0 +1,27 @@
+<!doctype html>
+<style>
+label:after{content:": ";}
+#url{width:42%;}
+</style>
+<title>generate manifest from URL</title>
+<h1>generate manifest from URL</h1>
+<form method="post" enctype="multipart/form-data"
+      action="https://localhost:8000/82f794873c12912aac592f82f866f237cd195e40">
+
+  <fieldset><legend>recursive fetch configuration</legend>
+    <ul>
+      <li><label for="url">URL</label><input id="url" type="text" name="url" value="http://the-m-project.org/apps/todos2/index.html"></li>
+    </ul>
+  </fieldset>
+
+  <fieldset><legend>generate manifest</legend>
+  </fieldset>
+
+  <fieldset><legend>download configuration</legend>
+    <ul>
+      <li><label for="filename">Download filename</label><input id="filename" type="text" name="filename" value="cache.manifest"></li>
+    </ul>
+  </fieldset>
+
+  <input type="submit" value="apply">
+</form>
