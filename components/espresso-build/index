@@ -8,6 +8,11 @@ cd src
 # remove any potential build directory
 rm -fR build
 
+if ! test -e frameworks; then
+  mkdir frameworks
+  ln -s /more/mway/Espresso/frameworks/The-M-Project frameworks
+fi
+
 /more/mway/Espresso/bin/espresso.js build
 
 # Note: we know there can only one directory in build/!
