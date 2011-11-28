@@ -3,7 +3,12 @@ set -xeuf
 
 test -f src
 
-type="`file -ib src`"
+if test -f src.mime-type; then
+  type="`cat src.mime-type`"
+else
+  type="`file -ib src`"
+fi
+
 length=`wc -c src | awk '{print$1}'`
 
 cat<<EOF
