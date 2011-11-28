@@ -23,5 +23,10 @@ label:after{content:": ";}
     </ul>
   </fieldset>
 
-  <input type="submit" value="apply">
+  <input type="submit" value="execute">
 </form>
+
+<h2>curl example</h2>
+<pre>
+  time curl -ksS -X POST https://localhost:8000/82f794873c12912aac592f82f866f237cd195e40?url=http://the-m-project.org/apps/todos2/index.html
+</pre>
