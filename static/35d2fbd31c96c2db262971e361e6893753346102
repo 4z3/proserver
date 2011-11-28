@@ -2,7 +2,7 @@
 <title>account overview</title>
 <h1>account overview</h1>
 <a href='/'>logout</a>
-<h2>applicatives</h2>
+<h2>programs</h2>
 <ul>
   <li>
     <a href='/dec438b22939a4c1d74bf070aa93e9745b913d82'>espresso build apk</a>
