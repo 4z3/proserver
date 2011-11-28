@@ -31,6 +31,14 @@ var primitive_program_table = {
     "name": "sendsrc",
     "command": path.join(root_path, 'components', 'sendsrc', 'index')
   },
+  "/40f01312839eff6335c03b2b2b56e3c2bbeb9d15": {
+    "name": "wget -m",
+    "command": path.join(root_path, 'components', 'wget_-m')
+  },
+  "/527365ccf5cd192d7b05eb02294d8b6edc23065b": {
+    "name": "generate manifest",
+    "command": path.join(root_path, 'components', 'generate_manifest')
+  },
 };
 var program_table = {
   "/dec438b22939a4c1d74bf070aa93e9745b913d82": {
@@ -42,6 +50,14 @@ var program_table = {
       "/9fa4a451844a412af7dc7655863c3a245744aad3", // package PhoneGap/Android
       "/2af293fe70e5be472f10b4165467ba05e5831380", // sendsrc
       // TODO? "download"
+    ]
+  },
+  "/82f794873c12912aac592f82f866f237cd195e40": {
+    "name": "generate manifest from URL",
+    "program": [
+      "/40f01312839eff6335c03b2b2b56e3c2bbeb9d15", // wget -m
+      "/527365ccf5cd192d7b05eb02294d8b6edc23065b", // generate manifest
+      "/2af293fe70e5be472f10b4165467ba05e5831380", // sendsrc
     ]
   },
 };
