@@ -30,3 +30,32 @@ label:after{content:": ";}
 <pre>
   time curl -ksS -X POST https://localhost:8000/82f794873c12912aac592f82f866f237cd195e40?url=http://the-m-project.org/apps/todos2/index.html
 </pre>
+
+<h2>HATEOAS example</h2>
+This example outlines how a
+<a href="https://en.wikipedia.org/wiki/HATEOAS">HATEOAS</a>-client
+could login, find, and execute this program (MOD error checking).
+<pre>
+  export api_url=https://oxberg.krebsco.de:31001
+
+  # GET the API entry point.
+  export page="$(curl -k $api_url)"
+
+  # Find the login URL.
+  login_url=$(find_login_url)
+
+  # Login; GET the account overview.
+  export page="$(curl -k $login_url)"
+
+  # Find the espresso build apk program URL.
+  program_url=$(find_program_url 'generate manifest from URL')
+
+  # Execute the program, and save the resulting manifest.
+  curl -k -F url=http://the-m-project.org/apps/todos2/index.html $program_url \
+      > cache.manifest
+</pre>
+Where the <tt>find_*_url</tt>
+programs parse the relevant information from <tt>$page</tt>.
+Currently the format of <tt>$page</tt> is not stable.
+Later there should be (at least) a (versioned) JSON-format,
+retrievable by using an appropriate <tt>Accept</tt>-header.
