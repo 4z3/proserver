@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-var port = 8000;
+var port = process.env.PORT || 8000;
 
 var root_path = (function _init_root_path () {
   var fs = require('fs');
