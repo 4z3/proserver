@@ -3,4 +3,11 @@
 <h1>account overview</h1>
 <a href='/'>logout</a>
 <h2>applicatives</h2>
-<a href='/dec438b22939a4c1d74bf070aa93e9745b913d82'>espresso build apk</a>
+<ul>
+  <li>
+    <a href='/dec438b22939a4c1d74bf070aa93e9745b913d82'>espresso build apk</a>
+  </li>
+  <li>
+    <a href='/82f794873c12912aac592f82f866f237cd195e40'>generate manifest from URL</a>
+  </li>
+</ul>
