@@ -54,9 +54,13 @@ import traceback
 import socket
 import ssl
 import http.server
+from os import environ as env
  
 SSL = True
-PORT = 4443 if SSL else 80
+if 'PORT' in env:
+  PORT = int(env['PORT'])
+else:
+  PORT = 4443 if SSL else 80
  
 def do_request(connstream, from_addr):
     x = object()
@@ -68,8 +72,7 @@ def do_request(connstream, from_addr):
  
 def serve():
     bindsocket = socket.socket()
-    #bindsocket.bind(('myaddr.mydomain.com', 10023))
-    bindsocket.bind(('localhost', PORT))
+    bindsocket.bind(('0.0.0.0', PORT))
     bindsocket.listen(5)
    
     print("serving on port", PORT)
