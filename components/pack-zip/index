@@ -1,0 +1,31 @@
+#! /bin/sh
+set -xeuf
+
+mkdir -p tmp
+
+cd src
+
+zip=../tmp/pack.zip
+
+pwd >&2
+
+find . -type f | sed -n 's:^\./\([^/]*\).*:\1:p' | sort | uniq |
+    xargs 7z a $zip >&2
+
+sha1sum $zip >&2
+
+
+
+type="`file -ib $zip`"
+length=`wc -c $zip | awk '{print$1}'`
+
+cat<<EOF
+HTTP/1.1 200 OK
+Content-Type: $type
+Content-Length: $length
+Connection: close
+
+EOF
+
+dd if=$zip bs=$length
+
