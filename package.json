@@ -2,6 +2,7 @@
   "name": "theatre",
   "description": "theatre",
   "author": "tv",
+  "version": "0.0.0",
   "dependencies": {
     "formidable": "1.0.x",
     "inotify": "0.2.x",
