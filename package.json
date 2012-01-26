@@ -1,0 +1,11 @@
+{
+  "name": "theatre",
+  "description": "theatre",
+  "author": "tv",
+  "dependencies": {
+    "formidable": "1.0.x",
+    "inotify": "0.2.x",
+    "node-uuid": "1.2.x"
+  },
+  "engine": "node >= 0.4"
+}
